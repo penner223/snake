@@ -1,0 +1,284 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Snake
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        public int[]  y = new int[2502]; //start
+        public int[]  x = new int[2502];
+        public int score = 1;
+        public int FoodX, FoodY;
+        public string direction;
+        public bool HasFood = false;
+        public char letter = ' ';
+
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            x[0] = 240;
+            y[0] = 240;
+            pictureBox1.Image = new Bitmap(500, 500);
+            Graphics graphics = Graphics.FromImage(pictureBox1.Image);
+            graphics.FillRectangle(Brushes.Black, 0, 0, 500, 500);
+            graphics.DrawString("Welcome to snake!", new Font("Arial", 30), Brushes.Red, new Point(75, 200));
+            graphics.DrawString("Press any key to start!", new Font("Arial", 20), Brushes.White, new Point(110, 242));
+
+        }
+
+        private void Form1_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if(letter == ' ')
+            {
+                timer1.Enabled = true;
+                pictureBox1.Image = new Bitmap(500, 500);
+                Graphics graphics = Graphics.FromImage(pictureBox1.Image);
+                graphics.Clear(Color.Black);
+            }
+            
+            if (e.KeyChar == 'a' || e.KeyChar == 'w' || e.KeyChar == 's' || e.KeyChar == 'd' )
+               letter = e.KeyChar;
+
+            if (e.KeyChar == 027)
+            {
+                stop();
+                DialogResult dialogResult = MessageBox.Show(this, "You paused the game! \n Press 'Ok' to continue", "Pause", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (dialogResult == DialogResult.OK)
+                {
+                    timer1.Enabled = true;              
+                }
+
+            }
+               
+
+
+
+        }
+        
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            draw();
+        }
+
+        void draw()
+        {
+            pictureBox1.Image = new Bitmap(500, 500);
+            Graphics graphics = Graphics.FromImage(pictureBox1.Image);
+
+            for (int i = score; i > 0; i--)
+            {
+                x[i] = x[i - 1];
+                y[i] = y[i - 1];
+            }
+
+
+            switch (letter)
+            {
+                case 'a':
+                    if (direction != "right")
+                    {
+                        x[0] -= 10;
+                        direction = "left";
+                    }
+                    else
+                    {
+                        x[0] += 10;
+                        direction = "right";
+                    }
+                    break;
+                case 'd':
+                    if (direction != "left")
+                    {
+                        x[0] += 10;
+                        direction = "right";
+                    }
+                    else
+                    {
+                        x[0] -= 10;
+                        direction = "left";
+                    }
+                    break;
+                case 's':
+                    if (direction != "up")
+                    { 
+                    y[0] += 10;
+                    direction = "down";
+                    }
+                    else
+                    {
+                        y[0] -= 10;
+                        direction = "up";
+                    }
+                    break;
+                case 'w':
+                    if(direction!="down")
+                    {
+                        y[0] -= 10;
+                        direction = "up";
+                    }
+                    else
+                    {
+                        y[0] += 10;
+                        direction = "down";
+                    }                    
+                    break;
+                default:                                                         
+                    x[0] += 10;                      
+                    break;
+            }
+
+
+            if (HasFood == false) //Make food
+            {
+                Random food = new Random();
+                bool stop = false;
+                do
+                {
+                    FoodX = food.Next(0, 490);
+                    FoodY = food.Next(0, 490);
+                    if (FoodX % 10 != 0)
+                    {
+                        do
+                        {
+                            FoodX++;
+                        } while (FoodX % 10 != 0);
+                    }
+
+                    if (FoodY % 10 != 0)
+                    {
+                        do
+                        {
+                            FoodY++;
+                        } while (FoodY % 10 != 0);
+                    }
+
+                    int test = 0;  
+                    if (score == 1)
+                    {
+                        if (FoodX == x[0] && FoodY == x[0])
+                        {
+                            
+                        }
+                        else
+                        {
+                            test++;
+                        }
+
+                        if (test == score-1)
+                        {
+                            stop = true;
+                        }
+                    }
+
+                    for (int i = 0; i< score -1;i++)
+                    {
+                        if (FoodX == x[i] && FoodY == x[i])
+                        {
+                           
+                        }
+                        else
+                        {
+                            test++;
+                        }
+                            
+                        if (test==score-1)
+                        {
+                            stop = true;
+                        }
+                            
+                    }               
+                } while (stop == false);
+                HasFood = true;               
+            }
+
+
+            graphics.FillRectangle(Brushes.Black, 0, 0, 500, 500); // draw black   
+
+            if (x[0] == FoodX && y[0] == FoodY)
+            {
+                HasFood = false;                
+                score++;                                  
+            }
+            
+            graphics.FillRectangle(Brushes.Red, FoodX, FoodY, 10, 10); //draw Food           
+            graphics.FillRectangle(Brushes.LightGreen, x[0], y[0], 10, 10); //draw light green snake
+            for (int i = 1; i < score; i++)
+                graphics.FillRectangle(Brushes.Green, x[i], y[i], 10, 10);
+
+            //gameover//////////////////
+            if (x[0] < 0 || x[0] > 500 || y[0] < 0 || y[0] > 500)
+            {
+                stop();
+                graphics.DrawString("Game Over!", new Font("Arial", 50), Brushes.Red, new Point(55, 190));
+                graphics.DrawString("Press any key to continue!", new Font("Arial", 20), Brushes.White, new Point(85, 260));
+                x[0] = 240;
+                y[0] = 240;
+                score = 1;
+                letter = ' ';
+            }
+
+            for (int i = 1; i < score - 1; i++)
+            {
+                if (x[0] == x[i] && y[0] == y[i])
+                {
+                    stop();
+                    graphics.DrawString("Game Over!", new Font("Arial", 50), Brushes.Red, new Point(55, 190));
+                    graphics.DrawString("Press any key to continue!", new Font("Arial", 20), Brushes.White, new Point(85, 260));
+                    x[0] = 240;
+                    y[0] = 240;
+                    score = 1;
+                    letter = ' ';
+                }
+            }
+            ////////////////////////// 
+
+            if (score == 2501)
+            {
+                stop();
+                graphics.DrawString("Congratulations\n ", new Font("Arial", 20), Brushes.White, new Point(150, 190));
+                graphics.DrawString("you reached the maximal\n ", new Font("Arial", 20), Brushes.White, new Point(100, 220));
+                graphics.DrawString("highscore 2500!", new Font("Arial", 20), Brushes.White, new Point(150, 250));
+                graphics.DrawString("Press any key to continue!", new Font("Arial", 20), Brushes.White, new Point(100, 280));
+                score = 1;
+                letter = ' ';
+            }
+
+            int position = 475;
+            if (score-1< 10000)
+                position = 430;
+            if (score-1 < 1000)
+                position = 445;
+            if (score-1 < 100)
+                position = 460;
+            if (score-1 < 10)
+                position = 475 ;
+         
+            graphics.DrawString(Convert.ToString(score-1),new Font("Arial",20), Brushes.White, new Point(position, 0));
+
+        }
+
+       
+
+        void stop()
+        {
+            timer1.Enabled = false;
+        }
+
+    }
+        
+
+    
+}
